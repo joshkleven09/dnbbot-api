@@ -1,0 +1,11 @@
+env: local
+logger:
+  level: DEBUG
+
+db:
+  host: db
+  username: admin
+  password: pass
+  db-name: dnbbot
+  port: 5432
+  logging-level: DEBUG

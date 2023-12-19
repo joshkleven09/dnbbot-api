@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  dnbbot-api:
+    build: .
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "sh", "-c", "/dnbbotapi/bin/migrate up && /dnbbotapi/bin/api" ]
+    restart: always
+  db:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=dnbbot
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d dnbbot" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    restart: always
