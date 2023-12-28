@@ -1,41 +1,47 @@
 package playSession
 
 import (
-	"dnbbot-api/api/resource/guild"
-	"dnbbot-api/api/resource/userProfile"
+	"dnbbot-api/api/resource"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type ApiService struct {
 	logger     *zerolog.Logger
 	validator  *validator.Validate
 	repository *Repository
-	userRepo   *userProfile.Repository
-	guildRepo  *guild.Repository
 }
 
-func New(logger *zerolog.Logger, validator *validator.Validate, db *gorm.DB) *ApiService {
+func New(logger *zerolog.Logger, validator *validator.Validate, db *mongo.Database) *ApiService {
 	return &ApiService{
 		logger:     logger,
 		validator:  validator,
 		repository: NewRepository(db),
-		userRepo:   userProfile.NewRepository(db),
-		guildRepo:  guild.NewRepository(db),
 	}
 }
 
-func (a *ApiService) GetPlaySessions(guildId uuid.UUID, userId uuid.UUID) (PlaySessions, error) {
+func (a *ApiService) GetPlaySessions(guildId string, userId string, date string, timeFilterStartStr string, timeFilterEndStr string) (PlaySessions, error) {
 	var playSessions PlaySessions
 	var err error
+	var timeFilterStart time.Time
+	var timeFilterEnd time.Time
 
-	if guildId != uuid.Nil && userId != uuid.Nil {
+	if (timeFilterStartStr != "" && timeFilterEndStr == "") || (timeFilterStartStr == "" && timeFilterEndStr != "") {
+		return nil, &resource.ValidationError{Message: "both start and end time filters must be provided"}
+	}
+
+	if timeFilterStartStr != "" && timeFilterEndStr != "" {
+		timeFilterStart, _ = time.Parse(time.RFC3339, timeFilterStartStr)
+		timeFilterEnd, _ = time.Parse(time.RFC3339, timeFilterEndStr)
+	}
+
+	if guildId != "" && userId != "" {
 		playSessions, err = a.repository.FindAllByGuildAndUserId(guildId, userId)
-	} else if guildId != uuid.Nil {
-		playSessions, err = a.repository.FindAllByGuildId(guildId)
-	} else if userId != uuid.Nil {
+	} else if guildId != "" {
+		playSessions, err = a.repository.FindAllByGuildId(guildId, date, timeFilterStart, timeFilterEnd)
+	} else if userId != "" {
 		playSessions, err = a.repository.FindAllByUserId(userId)
 	} else {
 		playSessions, err = a.repository.FindAll()
@@ -44,35 +50,13 @@ func (a *ApiService) GetPlaySessions(guildId uuid.UUID, userId uuid.UUID) (PlayS
 	return playSessions, err
 }
 
-func (a *ApiService) GetPlaySession(sessionId uuid.UUID) (*PlaySession, error) {
-	return a.repository.FindById(sessionId)
-}
-
 func (a *ApiService) CreatePlaySession(playSessionCreateApi PlaySessionCreateApi) (*PlaySession, error) {
-	u, err := a.userRepo.GetOrCreate(userProfile.UserProfile{
-		ExternalId: playSessionCreateApi.ExternalUserId,
-		Name:       playSessionCreateApi.UserName,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	g, err := a.guildRepo.GetOrCreate(guild.Guild{
-		ExternalId: playSessionCreateApi.ExternalGuildId,
-		Name:       playSessionCreateApi.GuildName,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	newPlaySession := playSessionCreateApi.ToModel(u.ID, g.ID)
+	newPlaySession := playSessionCreateApi.ToModel()
 
 	playSession, err := a.repository.Create(newPlaySession)
 
 	if err == nil {
-		a.logger.Info().Str("id", playSession.ID.String()).Msg("new play_session created")
+		a.logger.Info().Msg("new play_session created")
 	}
 
 	return playSession, err

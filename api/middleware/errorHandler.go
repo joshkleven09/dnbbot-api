@@ -18,7 +18,7 @@ func ErrorHandler(logger *zerolog.Logger) gin.HandlerFunc {
 			logger.Error().Err(err).Msg("")
 		}
 
-		context.JSON(-1, "")
+		context.JSON(-1, lastError.JSON())
 	}
 
 }

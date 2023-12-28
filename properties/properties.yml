@@ -9,3 +9,7 @@ db:
   db-name: dnbbot
   port: 5432
   logging-level: DEBUG
+
+mongo:
+  connection: mongodb://mongo:27017
+  database: dnbbot

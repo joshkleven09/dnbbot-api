@@ -10,11 +10,7 @@ RUN go mod download
 # todo secrets copying here
 COPY . .
 
-RUN go build -ldflags '-w -s' -a -o ./bin/api ./cmd/api \
-    && go build -ldflags '-w -s' -a -o ./bin/migrate ./cmd/migrate
-
-RUN mkdir ./bin/migrations
-COPY ./migrations ./bin/migrations
+RUN go build -ldflags '-w -s' -a -o ./bin/api ./cmd/api
 
 EXPOSE 8080
 CMD ["/dnbbotapi/bin/api"]

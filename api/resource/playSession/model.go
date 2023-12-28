@@ -1,30 +1,32 @@
 package playSession
 
 import (
-	"dnbbot-api/api/resource"
-	"dnbbot-api/api/resource/guild"
-	"dnbbot-api/api/resource/userProfile"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type PlaySessionApi struct {
-	SessionId string              `json:"session_id"`
-	User      userProfile.UserApi `json:"user"`
-	Guild     guild.GuildApi      `json:"guild"`
-	StartTime time.Time           `json:"start_time"`
-	EndTime   time.Time           `json:"end_time"`
-	Game      string              `json:"game"`
-	IsPlayer  *bool               `json:"is_player"`
-	CreatedAt time.Time           `json:"created_at"`
-	UpdatedAt time.Time           `json:"updated_at"`
+	SessionId primitive.ObjectID `json:"session_id"`
+	UserId    string             `json:"user_id"`
+	Username  string             `json:"username"`
+	GuildId   string             `json:"guild_id"`
+	GuildName string             `json:"guild_name"`
+	Date      string             `json:"date"`
+	TimeRange string             `json:"time_range"`
+	StartTime time.Time          `json:"start_time"`
+	EndTime   time.Time          `json:"end_time"`
+	Game      string             `json:"game"`
+	IsPlayer  *bool              `json:"is_player"`
+	CreatedAt time.Time          `json:"created_at"`
 }
 
 type PlaySessionCreateApi struct {
 	ExternalUserId  string    `json:"external_user_id" form:"required"`
-	UserName        string    `json:"user_name" form:"required"`
+	Username        string    `json:"username" form:"required"`
 	ExternalGuildId string    `json:"external_guild_id" form:"required"`
 	GuildName       string    `json:"guild_name" form:"required"`
+	Date            string    `json:"date" form:"required"`
+	TimeRange       string    `json:"time_range" form:"required"`
 	StartTime       time.Time `json:"start_time" form:"required"`
 	EndTime         time.Time `json:"end_time" form:"required"`
 	Game            string    `json:"game"`
@@ -32,30 +34,36 @@ type PlaySessionCreateApi struct {
 }
 
 type PlaySession struct {
-	resource.Model
-	UserProfileID uuid.UUID
-	UserProfile   userProfile.UserProfile `gorm:"foreignKey:UserProfileID"`
-	GuildID       uuid.UUID
-	Guild         guild.Guild `gorm:"foreignKey:GuildID"`
-	StartTime     time.Time
-	EndTime       time.Time
-	Game          string
-	IsPlayer      *bool
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	UserId    string             `bson:"user_id"`
+	Username  string             `bson:"username"`
+	GuildId   string             `bson:"guild_id"`
+	GuildName string             `bson:"guild_name"`
+	Date      string             `bson:"date"`
+	TimeRange string             `bson:"time_range"`
+	StartTime time.Time          `bson:"start_time"`
+	EndTime   time.Time          `bson:"end_time"`
+	Game      string             `bson:"game"`
+	IsPlayer  *bool              `bson:"is_player"`
+	CreatedAt time.Time          `bson:"created_at"`
 }
 
 type PlaySessions []*PlaySession
 
 func (p *PlaySession) ToApi() *PlaySessionApi {
 	return &PlaySessionApi{
-		SessionId: p.ID.String(),
-		User:      *p.UserProfile.ToApi(),
-		Guild:     *p.Guild.ToApi(),
+		SessionId: p.ID,
+		UserId:    p.UserId,
+		Username:  p.Username,
+		GuildId:   p.GuildId,
+		GuildName: p.GuildName,
+		Date:      p.Date,
+		TimeRange: p.TimeRange,
 		StartTime: p.StartTime,
 		EndTime:   p.EndTime,
 		Game:      p.Game,
 		IsPlayer:  p.IsPlayer,
 		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
 	}
 }
 
@@ -68,13 +76,18 @@ func (playSessions PlaySessions) ToApi() []*PlaySessionApi {
 	return apis
 }
 
-func (p *PlaySessionCreateApi) ToModel(userUuid uuid.UUID, guildUuid uuid.UUID) *PlaySession {
+func (p *PlaySessionCreateApi) ToModel() *PlaySession {
 	return &PlaySession{
-		UserProfileID: userUuid,
-		GuildID:       guildUuid,
-		StartTime:     p.StartTime,
-		EndTime:       p.EndTime,
-		Game:          p.Game,
-		IsPlayer:      p.IsPlayer,
+		UserId:    p.ExternalUserId,
+		Username:  p.Username,
+		GuildId:   p.ExternalGuildId,
+		GuildName: p.GuildName,
+		Date:      p.Date,
+		TimeRange: p.TimeRange,
+		StartTime: p.StartTime,
+		EndTime:   p.EndTime,
+		Game:      p.Game,
+		IsPlayer:  p.IsPlayer,
+		CreatedAt: time.Now(),
 	}
 }

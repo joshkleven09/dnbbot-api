@@ -1,70 +1,108 @@
 package playSession
 
 import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type Repository struct {
-	db *gorm.DB
+	coll *mongo.Collection
 }
 
-func NewRepository(db *gorm.DB) *Repository {
+func NewRepository(db *mongo.Database) *Repository {
 	return &Repository{
-		db: db,
+		coll: db.Collection("play-session"),
 	}
 }
 
 func (r *Repository) FindAll() (PlaySessions, error) {
 	playSessions := make([]*PlaySession, 0)
-	if err := r.db.Joins("UserProfile").Joins("Guild").Find(&playSessions).Error; err != nil {
+
+	cursor, err := r.coll.Find(context.TODO(), bson.D{{}})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &playSessions); err != nil {
 		return nil, err
 	}
 
 	return playSessions, nil
 }
 
-func (r *Repository) FindAllByGuildAndUserId(guildId uuid.UUID, userId uuid.UUID) (PlaySessions, error) {
+func (r *Repository) FindAllByGuildAndUserId(guildId string, userId string) (PlaySessions, error) {
 	playSessions := make([]*PlaySession, 0)
-	if err := r.db.Joins("UserProfile").Joins("Guild").Where("guild_id = ? && user_profile_id = ?", guildId, userId).Find(&playSessions).Error; err != nil {
+
+	cursor, err := r.coll.Find(context.TODO(), bson.D{{"guild_id", guildId}, {"user_id", userId}})
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &playSessions); err != nil {
 		return nil, err
 	}
 
 	return playSessions, nil
 }
 
-func (r *Repository) FindAllByGuildId(guildId uuid.UUID) (PlaySessions, error) {
+func (r *Repository) FindAllByGuildId(guildId string, date string, timeFilterStart time.Time, timeFilterEnd time.Time) (PlaySessions, error) {
 	playSessions := make([]*PlaySession, 0)
-	if err := r.db.Joins("UserProfile").Joins("Guild").Where("guild_id = ?", guildId).Find(&playSessions).Error; err != nil {
+	filter := bson.D{{}}
+
+	if !time.Time.IsZero(timeFilterStart) && !time.Time.IsZero(timeFilterEnd) {
+		filter = bson.D{
+			{"guild_id", guildId},
+			{"$and",
+				bson.A{
+					bson.D{{"start_time", bson.D{{"$gte", timeFilterStart}}}},
+					bson.D{{"start_time", bson.D{{"$lte", timeFilterEnd}}}},
+				},
+			},
+		}
+	} else if date != "" {
+		filter = bson.D{{"guild_id", guildId}, {"date", date}}
+	} else {
+		filter = bson.D{{"guild_id", guildId}}
+	}
+
+	cursor, err := r.coll.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &playSessions); err != nil {
 		return nil, err
 	}
 
 	return playSessions, nil
 }
 
-func (r *Repository) FindAllByUserId(userId uuid.UUID) (PlaySessions, error) {
+func (r *Repository) FindAllByUserId(userId string) (PlaySessions, error) {
 	playSessions := make([]*PlaySession, 0)
-	if err := r.db.Joins("UserProfile").Joins("Guild").Where("user_profile_id = ?", userId).Find(&playSessions).Error; err != nil {
+
+	cursor, err := r.coll.Find(context.TODO(), bson.D{{"user_id", userId}})
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &playSessions); err != nil {
 		return nil, err
 	}
 
 	return playSessions, nil
-}
-
-func (r *Repository) FindById(id uuid.UUID) (*PlaySession, error) {
-	playSession := &PlaySession{}
-
-	if err := r.db.Joins("UserProfile").Joins("Guild").First(&playSession, id).Error; err != nil {
-		return nil, err
-	}
-
-	return playSession, nil
 }
 
 func (r *Repository) Create(playSession *PlaySession) (*PlaySession, error) {
-	if err := r.db.Create(playSession).Error; err != nil {
+	result, err := r.coll.InsertOne(context.TODO(), playSession)
+	if err != nil {
 		return nil, err
 	}
+
+	playSession.ID = result.InsertedID.(primitive.ObjectID)
 
 	return playSession, nil
 }
