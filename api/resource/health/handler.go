@@ -25,6 +25,6 @@ func New(logger *zerolog.Logger, validator *validator.Validate) *ApiService {
 
 func (a *ApiService) HandleGetHealth(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, Health{
-		Status: "healthy",
+		Status: "up",
 	})
 }
