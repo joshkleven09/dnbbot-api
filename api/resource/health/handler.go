@@ -5,10 +5,12 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 	"net/http"
+	"os"
 )
 
 type Health struct {
-	Status string `json:"status"`
+	Status  string `json:"status"`
+	Version string `json:"version"`
 }
 
 type ApiService struct {
@@ -25,6 +27,7 @@ func New(logger *zerolog.Logger, validator *validator.Validate) *ApiService {
 
 func (a *ApiService) HandleGetHealth(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, Health{
-		Status: "up",
+		Status:  "up",
+		Version: os.Getenv("DNBBOT_API_VERSION"),
 	})
 }
