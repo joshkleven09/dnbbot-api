@@ -57,4 +57,4 @@ workflows:
       - build-and-test
       - build-docker-image:
           requires:
-            - build
+            - build-and-test
