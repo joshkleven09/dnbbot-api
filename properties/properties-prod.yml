@@ -1,0 +1,6 @@
+env: prod
+logger:
+  level: DEBUG
+
+mongo:
+  database: dnbbot

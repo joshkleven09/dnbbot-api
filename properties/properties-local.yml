@@ -1,0 +1,7 @@
+env: local
+logger:
+  level: DEBUG
+
+mongo:
+  connection: "mongodb://mongo:27017"
+  database: dnbbot

@@ -2,6 +2,7 @@ package router
 
 import (
 	"dnbbot-api/api/middleware"
+	"dnbbot-api/api/resource/health"
 	"dnbbot-api/api/resource/playSession"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -13,7 +14,10 @@ func New(logger *zerolog.Logger, validator *validator.Validate, db *mongo.Databa
 	router := gin.New()
 	router.Use(middleware.ErrorHandler(logger))
 
+	healthApi := health.New(logger, validator)
 	playSessionApi := playSession.New(logger, validator, db)
+
+	router.GET("/health", healthApi.HandleGetHealth)
 
 	router.GET("/v1/sessions", playSessionApi.HandleGetPlaySessions)
 	router.POST("/v1/sessions", playSessionApi.HandleCreatePlaySession)
