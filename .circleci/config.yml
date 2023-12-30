@@ -34,11 +34,11 @@ jobs:
       - run:
           name: Build and push Docker image
           command: |
-            docker build --build-arg DNBBOT_MONGO_CONN_STR=${DNBBOT_MONGO_CONN_STR} --build-arg DNBBOT_ENV=prod --build-arg DNBBOT_API_VERSION=v1.0.${CIRCLE_BUILD_NUM} -t dnbbot .
-            docker image tag dnbbot dnbbot.azurecr.io/dnbbot:v1.0.${CIRCLE_BUILD_NUM}
-            docker image tag dnbbot dnbbot.azurecr.io/dnbbot:latest
+            docker build --build-arg DNBBOT_MONGO_CONN_STR=${DNBBOT_MONGO_CONN_STR} --build-arg DNBBOT_ENV=prod --build-arg DNBBOT_API_VERSION=v1.0.${CIRCLE_BUILD_NUM} -t dnbbotapi .
+            docker image tag dnbbotapi dnbbot.azurecr.io/dnbbotapi:v1.0.${CIRCLE_BUILD_NUM}
+            docker image tag dnbbotapi dnbbot.azurecr.io/dnbbotapi:latest
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} dnbbot.azurecr.io
-            docker push --all-tags dnbbot.azurecr.io/dnbbot
+            docker push --all-tags dnbbot.azurecr.io/dnbbotapi
 
 workflows:
   build-deploy-azure:
