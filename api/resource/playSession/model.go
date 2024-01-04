@@ -6,23 +6,25 @@ import (
 )
 
 type PlaySessionApi struct {
-	SessionId primitive.ObjectID `json:"session_id"`
-	UserId    string             `json:"user_id"`
-	Username  string             `json:"username"`
-	GuildId   string             `json:"guild_id"`
-	GuildName string             `json:"guild_name"`
-	Date      string             `json:"date"`
-	TimeRange string             `json:"time_range"`
-	StartTime time.Time          `json:"start_time"`
-	EndTime   time.Time          `json:"end_time"`
-	Game      string             `json:"game"`
-	IsPlayer  *bool              `json:"is_player"`
-	CreatedAt time.Time          `json:"created_at"`
+	SessionId       primitive.ObjectID `json:"session_id"`
+	UserId          string             `json:"user_id"`
+	Username        string             `json:"username"`
+	UserDisplayName string             `json:"user_display_name"`
+	GuildId         string             `json:"guild_id"`
+	GuildName       string             `json:"guild_name"`
+	Date            string             `json:"date"`
+	TimeRange       string             `json:"time_range"`
+	StartTime       time.Time          `json:"start_time"`
+	EndTime         time.Time          `json:"end_time"`
+	Game            string             `json:"game"`
+	IsPlayer        *bool              `json:"is_player"`
+	CreatedAt       time.Time          `json:"created_at"`
 }
 
 type PlaySessionCreateApi struct {
 	ExternalUserId  string    `json:"external_user_id" form:"required"`
 	Username        string    `json:"username" form:"required"`
+	UserDisplayName string    `json:"user_display_name" form:"required"`
 	ExternalGuildId string    `json:"external_guild_id" form:"required"`
 	GuildName       string    `json:"guild_name" form:"required"`
 	Date            string    `json:"date" form:"required"`
@@ -34,36 +36,38 @@ type PlaySessionCreateApi struct {
 }
 
 type PlaySession struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserId    string             `bson:"user_id"`
-	Username  string             `bson:"username"`
-	GuildId   string             `bson:"guild_id"`
-	GuildName string             `bson:"guild_name"`
-	Date      string             `bson:"date"`
-	TimeRange string             `bson:"time_range"`
-	StartTime time.Time          `bson:"start_time"`
-	EndTime   time.Time          `bson:"end_time"`
-	Game      string             `bson:"game"`
-	IsPlayer  *bool              `bson:"is_player"`
-	CreatedAt time.Time          `bson:"created_at"`
+	ID              primitive.ObjectID `bson:"_id,omitempty"`
+	UserId          string             `bson:"user_id"`
+	Username        string             `bson:"username"`
+	UserDisplayName string             `bson:"user_display_name"`
+	GuildId         string             `bson:"guild_id"`
+	GuildName       string             `bson:"guild_name"`
+	Date            string             `bson:"date"`
+	TimeRange       string             `bson:"time_range"`
+	StartTime       time.Time          `bson:"start_time"`
+	EndTime         time.Time          `bson:"end_time"`
+	Game            string             `bson:"game"`
+	IsPlayer        *bool              `bson:"is_player"`
+	CreatedAt       time.Time          `bson:"created_at"`
 }
 
 type PlaySessions []*PlaySession
 
 func (p *PlaySession) ToApi() *PlaySessionApi {
 	return &PlaySessionApi{
-		SessionId: p.ID,
-		UserId:    p.UserId,
-		Username:  p.Username,
-		GuildId:   p.GuildId,
-		GuildName: p.GuildName,
-		Date:      p.Date,
-		TimeRange: p.TimeRange,
-		StartTime: p.StartTime,
-		EndTime:   p.EndTime,
-		Game:      p.Game,
-		IsPlayer:  p.IsPlayer,
-		CreatedAt: p.CreatedAt,
+		SessionId:       p.ID,
+		UserId:          p.UserId,
+		Username:        p.Username,
+		UserDisplayName: p.UserDisplayName,
+		GuildId:         p.GuildId,
+		GuildName:       p.GuildName,
+		Date:            p.Date,
+		TimeRange:       p.TimeRange,
+		StartTime:       p.StartTime,
+		EndTime:         p.EndTime,
+		Game:            p.Game,
+		IsPlayer:        p.IsPlayer,
+		CreatedAt:       p.CreatedAt,
 	}
 }
 
@@ -78,16 +82,17 @@ func (playSessions PlaySessions) ToApi() []*PlaySessionApi {
 
 func (p *PlaySessionCreateApi) ToModel() *PlaySession {
 	return &PlaySession{
-		UserId:    p.ExternalUserId,
-		Username:  p.Username,
-		GuildId:   p.ExternalGuildId,
-		GuildName: p.GuildName,
-		Date:      p.Date,
-		TimeRange: p.TimeRange,
-		StartTime: p.StartTime,
-		EndTime:   p.EndTime,
-		Game:      p.Game,
-		IsPlayer:  p.IsPlayer,
-		CreatedAt: time.Now(),
+		UserId:          p.ExternalUserId,
+		Username:        p.Username,
+		UserDisplayName: p.UserDisplayName,
+		GuildId:         p.ExternalGuildId,
+		GuildName:       p.GuildName,
+		Date:            p.Date,
+		TimeRange:       p.TimeRange,
+		StartTime:       p.StartTime,
+		EndTime:         p.EndTime,
+		Game:            p.Game,
+		IsPlayer:        p.IsPlayer,
+		CreatedAt:       time.Now(),
 	}
 }
