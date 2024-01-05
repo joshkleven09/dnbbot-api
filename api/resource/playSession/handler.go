@@ -52,9 +52,27 @@ func (a *ApiService) HandleCreatePlaySession(context *gin.Context) {
 	playSession, err := a.CreatePlaySession(*playSessionCreateApi)
 
 	if err != nil {
-		context.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		target := &resource.DuplicateError{}
+		if errors.As(err, &target) {
+			context.AbortWithError(http.StatusConflict, err)
+		} else {
+			context.AbortWithError(http.StatusInternalServerError, err)
+		}
 		return
 	}
 
 	context.IndentedJSON(http.StatusCreated, playSession.ToApi())
+}
+
+func (a *ApiService) HandleDeletePlaySession(context *gin.Context) {
+	playSessionId := context.Param("id")
+
+	err := a.DeletePlaySession(playSessionId)
+
+	if err != nil {
+		context.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	context.Status(http.StatusNoContent)
 }

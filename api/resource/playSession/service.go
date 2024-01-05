@@ -61,3 +61,13 @@ func (a *ApiService) CreatePlaySession(playSessionCreateApi PlaySessionCreateApi
 
 	return playSession, err
 }
+
+func (a *ApiService) DeletePlaySession(playSessionId string) error {
+	err := a.repository.Delete(playSessionId)
+
+	if err == nil {
+		a.logger.Info().Msg("deleted play session " + playSessionId)
+	}
+
+	return err
+}

@@ -1,12 +1,14 @@
 version: 2.1
 
 jobs:
-  build-and-test:
+  build-test-publish-docker:
     working_directory: ~/repo
     docker:
       - image: cimg/go:1.21.4
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - restore_cache:
           keys:
             - go-mod-v4-{{ checksum "go.sum" }}
@@ -24,13 +26,6 @@ jobs:
   #            gotestsum --junitfile /tmp/test-reports/unit-tests.xml
   #      - store_test_results:
   #          path: /tmp/test-reports
-  build-docker-image:
-    docker:
-      - image: cimg/go:1.18.3
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Build and push Docker image
           command: |
@@ -43,7 +38,4 @@ jobs:
 workflows:
   build-deploy-azure:
     jobs:
-      - build-and-test
-      - build-docker-image:
-          requires:
-            - build-and-test
+      - build-test-publish-docker

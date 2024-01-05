@@ -21,6 +21,7 @@ func New(logger *zerolog.Logger, validator *validator.Validate, db *mongo.Databa
 
 	router.GET("/v1/sessions", playSessionApi.HandleGetPlaySessions)
 	router.POST("/v1/sessions", playSessionApi.HandleCreatePlaySession)
+	router.DELETE("/v1/sessions/:id", playSessionApi.HandleDeletePlaySession)
 
 	err := router.Run(":8080")
 	if err != nil {

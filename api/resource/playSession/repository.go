@@ -2,6 +2,7 @@ package playSession
 
 import (
 	"context"
+	"dnbbot-api/api/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -99,10 +100,24 @@ func (r *Repository) FindAllByUserId(userId string) (PlaySessions, error) {
 func (r *Repository) Create(playSession *PlaySession) (*PlaySession, error) {
 	result, err := r.coll.InsertOne(context.TODO(), playSession)
 	if err != nil {
-		return nil, err
+		if mongo.IsDuplicateKeyError(err) {
+			return nil, &resource.DuplicateError{Message: "Session already exists for user, guild, time range"}
+		} else {
+			return nil, err
+		}
 	}
 
 	playSession.ID = result.InsertedID.(primitive.ObjectID)
 
 	return playSession, nil
+}
+
+func (r *Repository) Delete(playSessionId string) error {
+	objID, err := primitive.ObjectIDFromHex(playSessionId)
+	if err != nil {
+		return err
+	}
+	_, err = r.coll.DeleteOne(context.TODO(), bson.D{{"_id", objID}})
+
+	return err
 }
